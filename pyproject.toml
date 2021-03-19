@@ -10,6 +10,8 @@ python = "^3.9"
 "aws-cdk.aws-ec2" = "^1.93.0"
 python-dotenv = "^0.15.0"
 "aws-cdk.aws-efs" = "^1.93.0"
+"aws-cdk.aws-servicecatalog" = "^1.94.1"
+"aws-cdk.aws-s3-deployment" = "^1.94.1"
 
 [tool.poetry.dev-dependencies]
 black = {version = "^20.8b1", allow-prereleases = true}
