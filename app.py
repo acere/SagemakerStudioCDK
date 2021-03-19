@@ -1,17 +1,27 @@
 #!/usr/bin/env python3
 
+import os
+
 from aws_cdk import core as cdk
+from dotenv import find_dotenv, load_dotenv
 
-# For consistency with TypeScript code, `cdk` is the preferred import name for
-# the CDK's core module.  The following line also imports it as `core` for use
-# with examples from the CDK Developer's Guide, which are in the process of
-# being updated to use `cdk`.  You may delete this import if you don't need it.
-from aws_cdk import core
+from sm_user.sm_domain_stack import SMSDomainStack
+from sm_user.sm_user_stack import SMSIAMUserStack
+from sm_user.vpc_construct import VpcStack
 
-from sm_user.sm_user_stack import SmUserStack
+load_dotenv(find_dotenv())
 
+env = cdk.Environment(
+    region=os.getenv("CDK_DEPLOY_REGION"), account=os.getenv("CDK_DEPLOY_ACCOUNT")
+)
 
-app = core.App()
-SmUserStack(app, "SmUserStack")
+app = cdk.App()
+
+vpc = VpcStack(app, "SageMakerStudioVpc", env=env)
+domain = SMSDomainStack(app, "SageMakerStudioDomain", vpc=vpc.vpc, env=env)
+user = SMSIAMUserStack(
+    app, construct_id="SageMakerStudioUser", domain=domain.studio_domain
+)
+
 
 app.synth()
