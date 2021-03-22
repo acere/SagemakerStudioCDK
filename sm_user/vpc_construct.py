@@ -1,9 +1,9 @@
 from aws_cdk import aws_ec2 as ec2
-from aws_cdk import core
+from aws_cdk import core as cdk
 
 
-class VpcStack(core.Stack):
-    def __init__(self, scope: core.Construct, id: str, **kwargs) -> None:
+class VpcStack(cdk.Stack):
+    def __init__(self, scope: cdk.Construct, id: str, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
         self.vpc = ec2.Vpc(
@@ -40,4 +40,4 @@ class VpcStack(core.Stack):
         self.vpc.add_gateway_endpoint(
             "S3Endpoint", service=ec2.GatewayVpcEndpointAwsService("s3")
         )
-        core.CfnOutput(self, "VPC ID", value=self.vpc.vpc_id)
+        cdk.CfnOutput(self, "VPC ID", value=self.vpc.vpc_id)
