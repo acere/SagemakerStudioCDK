@@ -12,11 +12,13 @@ python-dotenv = "^0.15.0"
 "aws-cdk.aws-efs" = "^1.93.0"
 "aws-cdk.aws-servicecatalog" = "^1.94.1"
 "aws-cdk.aws-s3-deployment" = "^1.94.1"
+"aws-cdk.aws-lambda-python" = "^1.95.1"
 
 [tool.poetry.dev-dependencies]
 black = {version = "^20.8b1", allow-prereleases = true}
 boto3 = "^1.17.28"
 isort = "^5.7.0"
+GitPython = "^3.1.14"
 
 [build-system]
 requires = ["setuptools", "poetry-core>=1.0.0"]

@@ -1,18 +1,30 @@
+from aws_cdk import aws_iam as iam
 from aws_cdk import aws_s3_assets as s3assets
 from aws_cdk import aws_servicecatalog as servicecatalog
 from aws_cdk import core as cdk
-from aws_cdk import aws_iam as iam
+from sm_domain.sm_domain_stack import SMSDomainStack
+
+from sm_user.sm_studio_user_lambda_construct import StudioUserLambda
 from sm_user.sm_user_stack import SMSIAMUserStack
 
 
-class StudioUserStack(cdk.Stack):
-    def __init__(self, scope: cdk.Construct, construct_id: str, **kwargs) -> None:
+class ServiceCatalogStudioUserStack(cdk.Stack):
+    def __init__(
+        self, scope: cdk.Construct, construct_id: str, domain: SMSDomainStack, **kwargs
+    ) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        # We start by generating the CF template for the studio user
+        # Create the Lambda Stack for pre-populating the user home directory
+        studio_user_lambda = StudioUserLambda(
+            self, "FnPopulateStudioUser", vpc=domain.vpc, domain=domain.studio_domain
+        )
+
+        # Generate the CF template for the studio user
         stage = cdk.Stage(self, "DummyStage")
         SMSIAMUserStack(
-            stage, "StudioUserStack", synthesizer=cdk.BootstraplessSynthesizer()
+            stage,
+            "StudioUserStack",
+            synthesizer=cdk.BootstraplessSynthesizer(),
         )
         assembly = stage.synth(force=True)
 
@@ -47,7 +59,7 @@ class StudioUserStack(cdk.Stack):
             provider_name="SageMakerTemplate",
         )
 
-        # Associate the Studio User to the Portfolio
+        # Associate the Studio User Template to the Portfolio
         servicecatalog.CfnPortfolioProductAssociation(
             self,
             "ProductAssociation",
@@ -55,10 +67,13 @@ class StudioUserStack(cdk.Stack):
             product_id=sc_product.ref,
         )
 
-        sc_group = iam.Group(
+
+        # Associate a role with the portfolio
+        sc_role = iam.Role(
             self,
-            "StudioUserGroup",
-            group_name="SageMakerStudioUserGroup",
+            "StudioAdminRole",
+            assumed_by=iam.AnyPrincipal(), 
+            role_name="SageMakerStudioAdminRole",
             managed_policies=[
                 iam.ManagedPolicy.from_aws_managed_policy_name(
                     "AWSServiceCatalogEndUserReadOnlyAccess"
@@ -66,11 +81,10 @@ class StudioUserStack(cdk.Stack):
             ],
         )
 
-        # Associate a role
         servicecatalog.CfnPortfolioPrincipalAssociation(
             self,
             "PortfolioPrincipalAssociacion",
             portfolio_id=sc_portfolio.ref,
-            principal_arn=sc_group.group_arn,
+            principal_arn=sc_role.role_arn,
             principal_type="IAM",
         )
