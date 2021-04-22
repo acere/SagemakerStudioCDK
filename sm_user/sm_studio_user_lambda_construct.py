@@ -70,7 +70,7 @@ class StudioUserLambda(cdk.Stack):
         self.lambda_fn = lambda_python.PythonFunction(
             self,
             "UserSetupLambdaFn",
-            entry="lambda_fns",
+            entry="populate_git_fn",
             index="populate_from_git.py",
             handler="on_event",
             vpc=vpc,

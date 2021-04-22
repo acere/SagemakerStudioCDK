@@ -16,7 +16,7 @@ class ServiceCatalogStudioUserStack(cdk.Stack):
 
         # Create the Lambda Stack for pre-populating the user home directory
         studio_user_lambda = StudioUserLambda(
-            self, "FnPopulateStudioUser", vpc=domain.vpc, domain=domain.studio_domain
+            self, "FnPopulateStudioUser", vpc=domain.vpc, domain=domain.domain
         )
 
         # Generate the CF template for the studio user
@@ -67,12 +67,11 @@ class ServiceCatalogStudioUserStack(cdk.Stack):
             product_id=sc_product.ref,
         )
 
-
         # Associate a role with the portfolio
         sc_role = iam.Role(
             self,
             "StudioAdminRole",
-            assumed_by=iam.AnyPrincipal(), 
+            assumed_by=iam.AnyPrincipal(),
             role_name="SageMakerStudioAdminRole",
             managed_policies=[
                 iam.ManagedPolicy.from_aws_managed_policy_name(
