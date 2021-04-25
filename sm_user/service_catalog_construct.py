@@ -20,7 +20,7 @@ class ServiceCatalogStudioUserStack(cdk.Stack):
         )
 
         # Generate the CF template for the studio user
-        stage = cdk.Stage(self, "DummyStage")
+        stage = cdk.Stage(self, "IntermediateStage")
         SMSIAMUserStack(
             stage,
             "StudioUserStack",
@@ -67,7 +67,7 @@ class ServiceCatalogStudioUserStack(cdk.Stack):
             product_id=sc_product.ref,
         )
 
-        # Associate a role with the portfolio
+        # creat a role and associate it with the portfolio
         sc_role = iam.Role(
             self,
             "StudioAdminRole",
@@ -75,9 +75,48 @@ class ServiceCatalogStudioUserStack(cdk.Stack):
             role_name="SageMakerStudioAdminRole",
             managed_policies=[
                 iam.ManagedPolicy.from_aws_managed_policy_name(
-                    "AWSServiceCatalogEndUserReadOnlyAccess"
-                )
+                    "AWSServiceCatalogEndUserFullAccess"
+                ),
+                iam.ManagedPolicy.from_aws_managed_policy_name(
+                    "AmazonSageMakerFullAccess"
+                ),
             ],
+        )
+        sc_role.add_to_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "sagemaker:CreateUserProfile",
+                ],
+                resources=["*"],
+            )
+        )
+        sc_role.add_to_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "lambda:InvokeFunction",
+                ],
+                resources=[studio_user_lambda.provider.service_token],
+            )
+        )
+        sc_role.add_to_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "s3:GetObject",
+                    "s3:ListBucket",
+                ],
+                resources=["*"],
+            )
+        )
+
+        cdk.CfnOutput(
+            self,
+            "SageMakerStudioAdminRole",
+            value=sc_role.role_arn,
+            description="SageMakerStudioAdminRole",
+            # export_name="SageMakerStudioAdminRole",
         )
 
         servicecatalog.CfnPortfolioPrincipalAssociation(

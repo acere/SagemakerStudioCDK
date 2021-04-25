@@ -53,7 +53,7 @@ def on_create(event):
 
         shutil.rmtree(repo_folder, ignore_errors=True)
 
-        repo = Repo.clone_from(url=git_repo, to_path=repo_folder)
+        Repo.clone_from(url=git_repo, to_path=repo_folder)
         # Set ownership/permissions for all the stuff just created, to give the user write
         # access:
         os.chown(repo_folder, uid=efs_uid, gid=-1)
@@ -63,7 +63,6 @@ def on_create(event):
         # Don't bring the entire CF stack down just because we couldn't copy a repo:
         traceback.print_exc()
 
-    # chown_recursive(f"{home_folder}/{repo_folder_name}", uid=int(efs_uid))
     print("All done")
 
     logging.info("**SageMaker Studio user '%s' set up successfully", user_profile_name)

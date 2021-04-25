@@ -1,8 +1,8 @@
 from aws_cdk import aws_ec2 as ec2
 from aws_cdk import aws_iam as iam
+from aws_cdk import aws_lambda as lambda_
 from aws_cdk import aws_sagemaker as sagemaker
 from aws_cdk import core as cdk
-from aws_cdk import aws_lambda as lambda_
 
 
 class SMSDomainStack(cdk.Stack):
@@ -19,11 +19,10 @@ class SMSDomainStack(cdk.Stack):
             default="StudioDomain",
         )
 
-        # ToDo make the roles a parameter
-
+        # ToDo make the role a parameter?
         sm_user_policy = iam.ManagedPolicy(
             self,
-            "SageMakerUserPolicy",
+            "SageMakerDefaultUserPolicy",
             statements=[
                 iam.PolicyStatement(
                     effect=iam.Effect.ALLOW,
@@ -49,17 +48,14 @@ class SMSDomainStack(cdk.Stack):
             iam.ManagedPolicy.from_aws_managed_policy_name(k)
             for k in [
                 "AmazonSageMakerFullAccess",
-                # "AmazonS3FullAccess",
-                # "AWSCloudFormationFullAccess",
-                # "AWSCodePipeline_FullAccess",
             ]
         ]
 
         ### Default role assumed by users defined in this domain
         role = iam.Role(
             self,
-            "SMStudioRole",
-            path="/service-role/",
+            "SageMakerStudioDefaultRole",
+            # path="/service-role/",
             assumed_by=iam.ServicePrincipal("sagemaker.amazonaws.com"),
             managed_policies=managed_policies_list + [sm_user_policy],
         )
@@ -95,7 +91,7 @@ class SMSDomainStack(cdk.Stack):
                 "servicecatalog:ListAcceptedPortfolioShares",
                 "servicecatalog:AssociatePrincipalWithPortfolio",
             ],
-            resources=['*']
+            resources=["*"],
         )
         lambda_policy_iam = iam.PolicyStatement(
             effect=iam.Effect.ALLOW,
@@ -158,29 +154,15 @@ class SMSDomainStack(cdk.Stack):
             description="SageMaker Studio EFS fileSystem ID",
             export_name="StudioDomainEfsId",
         )
+        cdk.CfnOutput(
+            self,
+            "SageMakerStudioUserRole",
+            value=role.role_arn,
+            description="SageMaker Studio Role ARN",
+            export_name="SageMakerStudioUserRole",
+        )
+
 
         self.vpc = vpc
         self.domain = studio_domain
-
-        # lambda_fn = lambda_python.PythonFunction(
-        #     self,
-        #     "CFEnableSagemakerProjects",
-        #     entry="enable_projects_fn",
-        #     index="enable_projects.py",
-        #     handler="on_event",
-        #     timeout=cdk.Duration.seconds(5),
-        #     initial_policy=[lambda_policy],
-        # )
-
-        # my_provider = cr.Provider(
-        #     self,
-        #     "Provider",
-        #     on_event_handler=lambda_fn,
-        #     # log_retention=logs.RetentionDays.ONE_DAY,
-        # )
-        # cdk.CustomResource(
-        #     self,
-        #     "Resource1",
-        #     service_token=my_provider.service_token,
-        #     properties={"ExecutionRole": role.role_arn},
-        # )
+        self.user_role = role
