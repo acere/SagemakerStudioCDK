@@ -10,5 +10,6 @@
     "@aws-cdk/aws-s3:grantWriteWithoutAcl": true,
     "@aws-cdk/aws-ecs-patterns:removeDefaultDesiredCount": true
   },
-  "versionReporting": false
+  "versionReporting": false,
+  "requireApproval": "never"
 }
